@@ -1,6 +1,8 @@
 import { randomUUID } from "crypto";
 import { procedure, router } from "../trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+
 import type { Task } from "../../types/task";
 
 const tasks: Task[] = [];
@@ -9,17 +11,18 @@ export const taskRouter = router({
   getAll: procedure.query(() => {
     return tasks;
   }),
-
   getById: procedure.input(z.object({ id: z.string() })).query(({ input }) => {
     const task = tasks.find((task) => task.id === input.id);
 
     if (!task) {
-      throw new Error("Tarefa não encontrada.");
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Tarefa não encontrada.",
+      });
     }
 
     return task;
   }),
-
   create: procedure
     .input(
       z.object({
@@ -51,7 +54,10 @@ export const taskRouter = router({
       const taskIndex = tasks.findIndex((task) => task.id === input.id);
 
       if (taskIndex === -1) {
-        throw new Error("Tarefa não encontrada.");
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Tarefa não encontrada.",
+        });
       }
 
       const updatedTask: Task = {
@@ -64,14 +70,16 @@ export const taskRouter = router({
 
       return updatedTask;
     }),
-
   delete: procedure
     .input(z.object({ id: z.string() }))
     .mutation(({ input }) => {
       const taskIndex = tasks.findIndex((task) => task.id === input.id);
 
       if (taskIndex === -1) {
-        throw new Error("Tarefa não encontrada.");
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Tarefa não encontrada.",
+        });
       }
 
       tasks.splice(taskIndex, 1);
